@@ -46,15 +46,10 @@ const int bluePins[NUM_COMPARTMENTS]  = {15, 17, 19};
 // Hall Effect Sensor pins configuration (digital output only)
 // Digital output (D0) from module goes HIGH when magnetic field exceeds threshold
 const int hallSensorPins[NUM_COMPARTMENTS] = {25, 26, 27};
-const int buzzerPin = 32;
+const int buzzerPin = 33;  // Changed to match second.c
 
-// Hall Effect sensor states
+// Hall Effect sensor states (similar to previousButtonState in second.c)
 bool previousHallState[NUM_COMPARTMENTS] = {HIGH, HIGH, HIGH};
-bool compartmentClosed[NUM_COMPARTMENTS] = {true, true, true};
-
-// Debounce variables for Hall Effect sensors
-unsigned long lastDebounceTime[NUM_COMPARTMENTS] = {0, 0, 0};
-const unsigned long debounceDelay = 50; // ms
 
 // LED state structure
 struct LEDControl {
@@ -356,85 +351,135 @@ void handleBuzzer() {
   }
 }
 
-// Check Hall Effect sensors (digital output only)
+// Check Hall Effect sensors (similar to checkButtons in second.c)
 void checkHallSensors() {
   for (int i = 0; i < NUM_COMPARTMENTS; i++) {
-    // Read digital output from Hall Effect sensor
-    int sensorReading = digitalRead(hallSensorPins[i]);
+    // Read Hall Effect sensor state with simple debounce
+    int reading = digitalRead(hallSensorPins[i]);
+    int state = reading; // Default to current reading
     
-    // If the reading changed, reset debounce timer
-    if (sensorReading != previousHallState[i]) {
-      lastDebounceTime[i] = millis();
+    // Optional: Simple software debounce (uncomment if needed)
+    /*
+    if (reading != previousHallState[i]) {
+      delay(5); // Short delay for debounce
+      // Read again to confirm state change
+      state = digitalRead(hallSensorPins[i]);
     }
+    */
     
-    // Check if time since last change is greater than debounce delay
-    if ((millis() - lastDebounceTime[i]) > debounceDelay) {
-      // Digital output (D0) goes HIGH when magnetic field exceeds threshold
-      bool newCompartmentState = (sensorReading == HIGH);
+    // For Hall Effect: LOW means no magnetic field (lid is open)
+    // This is equivalent to a button press in the original code
+    if (previousHallState[i] == HIGH && state == LOW) {
+      Serial.printf("[Input] Compartment %d opened (Hall Effect triggered)\n", i + 1);
       
-      // If the compartment state has changed (debounced)
-      if (newCompartmentState != compartmentClosed[i]) {
-        // Update the compartment state
-        compartmentClosed[i] = newCompartmentState;
-        
-        // If compartment was closed and is now open
-        if (!compartmentClosed[i]) {
-          Serial.printf("[Input] Compartment %d opened (Hall Effect triggered)\n", i + 1);
+      // Show solid green to indicate medicine taken
+      setGreen(i);
+      
+      bool hadActiveReminder = false;
+      for (int j = 0; j < ALARMS_PER_COMP; j++) {
+        if (schedules[i].reminderActive[j]) {
+          schedules[i].reminderActive[j] = false;
+          schedules[i].reminderDone[j] = true;
+          hadActiveReminder = true;
+          Serial.printf("[Alarm] Reminder cleared for %s\n", schedules[i].medicineName);
           
-          // Show solid green to indicate medicine taken
-          setGreen(i);
-          
-          bool hadActiveReminder = false;
-          for (int j = 0; j < ALARMS_PER_COMP; j++) {
-            if (schedules[i].reminderActive[j]) {
-              schedules[i].reminderActive[j] = false;
-              schedules[i].reminderDone[j] = true;
-              hadActiveReminder = true;
-              Serial.printf("[Alarm] Reminder cleared for %s\n", schedules[i].medicineName);
-              
-              // Send medicine taken message to terminal
-              if (Blynk.connected()) {
-                String takenMsg = "TAKEN: " + String(schedules[i].medicineName) + " from compartment " + (i+1);
-                sendTerminalMessage(takenMsg);
-              }
-            }
+          // Send medicine taken message to terminal
+          if (Blynk.connected()) {
+            String takenMsg = "TAKEN: " + String(schedules[i].medicineName) + " from compartment " + (i+1);
+            sendTerminalMessage(takenMsg);
           }
-          
-          if (hadActiveReminder) {
-            // Keep green solid for 3 seconds, then turn off
-            timer.setTimeout(3000L, [i]() {
-              if (ledControls[i].state == LED_GREEN_SOLID) {
-                turnOffLED(i);
-              }
-            });
-          } else {
-            // No active reminder - show blue blink briefly to acknowledge compartment opening
-            setBlueBlink(i);
-            timer.setTimeout(2000L, [i]() {
-              if (ledControls[i].state == LED_BLUE_BLINK) {
-                turnOffLED(i);
-              }
-            });
-          }
-        } 
-        // If compartment was open and is now closed
-        else {
-          Serial.printf("[Input] Compartment %d closed\n", i + 1);
-          
-          // Briefly blink white to acknowledge closing
-          setWhiteBlink(i);
-          timer.setTimeout(1000L, [i]() {
-            if (ledControls[i].state == LED_WHITE_BLINK) {
-              turnOffLED(i);
-            }
-          });
         }
+      }
+      
+      if (hadActiveReminder) {
+        // Keep green solid for 3 seconds, then turn off
+        timer.setTimeout(3000L, [i]() {
+          if (ledControls[i].state == LED_GREEN_SOLID) {
+            turnOffLED(i);
+          }
+        });
+      } else {
+        // No active reminder - show blue blink briefly to acknowledge lid opening
+        setBlueBlink(i);
+        timer.setTimeout(2000L, [i]() {
+          if (ledControls[i].state == LED_BLUE_BLINK) {
+            turnOffLED(i);
+          }
+        });
       }
     }
     
-    // Save current reading for next comparison
-    previousHallState[i] = sensorReading;
+    // For Hall Effect: HIGH means magnetic field detected (lid is closed)
+    // This is equivalent to a button release in the original code
+    if (previousHallState[i] == LOW && state == HIGH) {
+      Serial.printf("[Input] Compartment %d closed\n", i + 1);
+      
+      // Briefly blink white to acknowledge closing
+      setWhiteBlink(i);
+      timer.setTimeout(1000L, [i]() {
+        if (ledControls[i].state == LED_WHITE_BLINK) {
+          turnOffLED(i);
+        }
+      });
+    }
+    
+    previousHallState[i] = state;
   }
+}
+
+// Function to directly test RGB LEDs (for debugging) - from second.c
+void testRGBLEDsDirect() {
+  Serial.println("[TEST] Starting quick RGB LED test...");
+  
+  // Test each LED color directly with reduced delays
+  for (int i = 0; i < NUM_COMPARTMENTS; i++) {
+    Serial.printf("[TEST] Testing RGB LED %d\n", i+1);
+    
+    // Make sure all pins are initialized as outputs
+    pinMode(redPins[i], OUTPUT);
+    pinMode(greenPins[i], OUTPUT);
+    pinMode(bluePins[i], OUTPUT);
+    
+    // Turn all LEDs off first
+    digitalWrite(redPins[i], HIGH);   // HIGH = OFF for common anode
+    digitalWrite(greenPins[i], HIGH); // HIGH = OFF for common anode
+    digitalWrite(bluePins[i], HIGH);  // HIGH = OFF for common anode
+    delay(100);
+    
+    // Test red
+    Serial.printf("[TEST] Testing RED pin %d\n", redPins[i]);
+    digitalWrite(redPins[i], LOW);    // LOW = ON for common anode
+    delay(200);
+    digitalWrite(redPins[i], HIGH);   // HIGH = OFF for common anode
+    delay(50);
+    
+    // Test green
+    Serial.printf("[TEST] Testing GREEN pin %d\n", greenPins[i]);
+    digitalWrite(greenPins[i], LOW);  // LOW = ON for common anode
+    delay(200);
+    digitalWrite(greenPins[i], HIGH); // HIGH = OFF for common anode
+    delay(50);
+    
+    // Test blue
+    Serial.printf("[TEST] Testing BLUE pin %d\n", bluePins[i]);
+    digitalWrite(bluePins[i], LOW);   // LOW = ON for common anode
+    delay(200);
+    digitalWrite(bluePins[i], HIGH);  // HIGH = OFF for common anode
+    delay(50);
+    
+    // Test white (all colors on)
+    Serial.println("[TEST] Testing WHITE (all colors)");
+    digitalWrite(redPins[i], LOW);    // LOW = ON for common anode
+    digitalWrite(greenPins[i], LOW);  // LOW = ON for common anode
+    digitalWrite(bluePins[i], LOW);   // LOW = ON for common anode
+    delay(200);
+    digitalWrite(redPins[i], HIGH);   // HIGH = OFF for common anode
+    digitalWrite(greenPins[i], HIGH); // HIGH = OFF for common anode
+    digitalWrite(bluePins[i], HIGH);  // HIGH = OFF for common anode
+    delay(50);
+  }
+  
+  Serial.println("[TEST] Quick RGB LED test complete");
 }
 
 // Function to test Hall Effect sensors
@@ -449,9 +494,20 @@ void testHallSensors() {
     int sensorReading = digitalRead(hallSensorPins[i]);
     
     Serial.printf("[TEST] Compartment %d sensor: %s\n", i+1, 
-                 sensorReading == HIGH ? "TRIGGERED (HIGH)" : "NOT TRIGGERED (LOW)");
+                 sensorReading == HIGH ? "MAGNET DETECTED (HIGH) - LID CLOSED" : "NO MAGNET (LOW) - LID OPEN");
     
-    // Turn off LED after testing
+    // Visual feedback based on state
+    if (sensorReading == HIGH) {
+      // Magnet detected - lid is closed
+      setGreen(i);
+      Serial.printf("[TEST] Compartment %d shows CLOSED state\n", i+1);
+    } else {
+      // No magnet - lid is open
+      setRed(i);
+      Serial.printf("[TEST] Compartment %d shows OPEN state\n", i+1);
+    }
+    
+    delay(1000);
     turnOffLED(i);
     delay(200);
   }
@@ -718,32 +774,7 @@ void indicateUpcomingAlarms() {
   }
 }
 
-// Function to test Hall Effect sensors
-void testHallSensors() {
-  Serial.println("[TEST] Starting Hall Effect sensor test...");
-  Serial.println("[TEST] Testing digital outputs from sensors...");
-  
-  for (int i = 0; i < NUM_COMPARTMENTS; i++) {
-    int sensorReading = digitalRead(hallSensorPins[i]);
-    Serial.printf("[TEST] Sensor %d (Pin %d): %s\n", 
-                  i+1, hallSensorPins[i], 
-                  sensorReading == HIGH ? "TRIGGERED (HIGH)" : "NOT TRIGGERED (LOW)");
-    
-    // Visual feedback based on sensor state
-    if (sensorReading == HIGH) {
-      setGreen(i);  // GREEN when triggered (likely lid open)
-      Serial.printf("[TEST] Sensor %d shows compartment OPEN\n", i+1);
-    } else {
-      setBlue(i);   // BLUE when not triggered (likely lid closed)
-      Serial.printf("[TEST] Sensor %d shows compartment CLOSED\n", i+1);
-    }
-    
-    delay(1000);
-    turnOffLED(i);
-  }
-  
-  Serial.println("[TEST] Hall Effect sensor test complete");
-}
+// The testHallSensors() function is already defined earlier in the code
 
 void setup() {
   Serial.begin(115200);
@@ -752,10 +783,8 @@ void setup() {
   // Initialize RGB LED pins
   for (int i = 0; i < NUM_COMPARTMENTS; i++) {
     // Debug output to help identify pin configuration issues
-    Serial.printf("[Setup] Initializing compartment %d: R=%d, G=%d, B=%d\n",
-                  i+1, redPins[i], greenPins[i], bluePins[i]);
-    Serial.printf("[Setup] Hall sensor %d: Digital=%d\n",
-                  i+1, hallSensorPins[i]);
+    Serial.printf("[Setup] Initializing compartment %d: R=%d, G=%d, B=%d, Hall Sensor=%d\n",
+                  i+1, redPins[i], greenPins[i], bluePins[i], hallSensorPins[i]);
     
     // Set all RGB pins as OUTPUT
     pinMode(redPins[i], OUTPUT);
@@ -768,8 +797,8 @@ void setup() {
     digitalWrite(greenPins[i], HIGH);
     digitalWrite(bluePins[i], HIGH);
     
-    // Set up Hall Effect sensor pins (digital output only)
-    pinMode(hallSensorPins[i], INPUT);
+    // Set up Hall Effect sensor pins with internal pull-up resistors (just like buttons in second.c)
+    pinMode(hallSensorPins[i], INPUT_PULLUP);
     
     // Initialize LED state struct
     turnOffLED(i);
@@ -794,22 +823,34 @@ void setup() {
   lcd.setCursor(0, 1);
   lcd.print("Hall Sensor Mode");
   
+  // Run direct LED test to ensure hardware is working correctly
+  testRGBLEDsDirect();
+  
   // Test Hall Effect sensors
   testHallSensors();
   
   // LED startup sequence - RGB test cycle for each compartment
-  Serial.println("[Setup] Running RGB LED test sequence");
+  Serial.println("[Setup] Running quick RGB LED test sequence using LED functions");
   for (int i = 0; i < NUM_COMPARTMENTS; i++) {
+    Serial.printf("[Test] Compartment %d: Red\n", i+1);
     setRed(i);
     delay(200);
+    
+    Serial.printf("[Test] Compartment %d: Green\n", i+1);
     setGreen(i);
     delay(200);
+    
+    Serial.printf("[Test] Compartment %d: Blue\n", i+1);
     setBlue(i);
     delay(200);
+    
+    Serial.printf("[Test] Compartment %d: White\n", i+1);
     setWhite(i);
     delay(200);
+    
+    Serial.printf("[Test] Compartment %d: Off\n", i+1);
     turnOffLED(i);
-    delay(100);
+    delay(100); // Brief pause between compartments
   }
 
   WiFi.begin(ssid, pass);
@@ -838,9 +879,9 @@ void setup() {
     lcd.print("WiFi Failed     ");
   }
 
-  // Set up timers
+  // Set up timers - exactly as in second.c but with checkHallSensors instead of checkButtons
   timer.setInterval(5000L, checkAlarms);
-  timer.setInterval(100L, checkHallSensors);   // Check Hall Effect sensors frequently
+  timer.setInterval(500L, checkHallSensors);   // Same as checkButtons interval in second.c
   timer.setInterval(100L, updateLEDs);         // Fast update for smooth blinking
   timer.setInterval(200L, handleBuzzer);
   timer.setInterval(5000L, resetDoneFlags);
