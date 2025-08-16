@@ -48,10 +48,8 @@ const int bluePins[NUM_COMPARTMENTS]  = {15, 17, 19};
 const int hallSensorPins[NUM_COMPARTMENTS] = {25, 26, 27};
 const int buzzerPin = 33;  // Changed to match second.c
 
-// Hall Effect sensor states (similar to previousButtonState in second.c)
-bool previousHallState[NUM_COMPARTMENTS] = {HIGH, HIGH, HIGH};
-
-// LED state structure
+  // Hall Effect sensor states (similar to previousButtonState in second.c)
+bool previousHallState[NUM_COMPARTMENTS] = {LOW, LOW, LOW};// LED state structure
 struct LEDControl {
   uint8_t state = LED_OFF;      // LED_OFF, LED_RED_SOLID, etc.
   bool blinkOn = false;       // Whether LED is currently on in blink cycle
@@ -351,79 +349,91 @@ void handleBuzzer() {
   }
 }
 
-// Check Hall Effect sensors (similar to checkButtons in second.c)
+// Check Hall Effect sensors for medicine box compartment lids
 void checkHallSensors() {
   for (int i = 0; i < NUM_COMPARTMENTS; i++) {
-    // Read Hall Effect sensor state with simple debounce
+    // Read Hall Effect sensor state
     int reading = digitalRead(hallSensorPins[i]);
-    int state = reading; // Default to current reading
     
-    // Optional: Simple software debounce (uncomment if needed)
-    /*
+    // Simple debounce
     if (reading != previousHallState[i]) {
-      delay(5); // Short delay for debounce
+      delay(20); // Increased delay for debounce to ensure stable reading
       // Read again to confirm state change
-      state = digitalRead(hallSensorPins[i]);
+      reading = digitalRead(hallSensorPins[i]);
+      
+      // Print detailed debugging information
+      Serial.printf("[DEBUG] Hall Sensor %d: Reading=%d, PreviousState=%d, Interpretation=%s\n", 
+                    i+1, reading, previousHallState[i], 
+                    (reading == LOW) ? "LID CLOSED (Magnet=100)" : "LID OPEN (Magnet=0)");
     }
-    */
     
-    // For Hall Effect: LOW means no magnetic field (lid is open)
-    // This is equivalent to a button press in the original code
-    if (previousHallState[i] == HIGH && state == LOW) {
-      Serial.printf("[Input] Compartment %d opened (Hall Effect triggered)\n", i + 1);
+    // Detect state change
+    if (reading != previousHallState[i]) {
+      // UPDATED LOGIC FOR WOKWI SIMULATION:
+      // - LOW (0) = Magnetic field present = Lid CLOSED (Magnet = 100)
+      // - HIGH (1) = No magnetic field = Lid OPEN (Magnet = 0)
       
-      // Show solid green to indicate medicine taken
-      setGreen(i);
-      
-      bool hadActiveReminder = false;
-      for (int j = 0; j < ALARMS_PER_COMP; j++) {
-        if (schedules[i].reminderActive[j]) {
+      if (reading == HIGH) {
+        // LID OPENED (magnet moved away from sensor)
+        Serial.printf("[Input] Compartment %d opened (Hall Effect triggered)\n", i + 1);
+        
+        // Show solid green to indicate medicine taken
+        setGreen(i);
+        
+        bool hadActiveReminder = false;
+        for (int j = 0; j < ALARMS_PER_COMP; j++) {
+          if (schedules[i].reminderActive[j]) {
+            schedules[i].reminderActive[j] = false;
+            schedules[i].reminderDone[j] = true;
+            hadActiveReminder = true;
+            Serial.printf("[Alarm] Reminder cleared for %s\n", schedules[i].medicineName);
+            
+            // Send medicine taken message to terminal
+            if (Blynk.connected()) {
+              String takenMsg = "TAKEN: " + String(schedules[i].medicineName) + " from compartment " + (i+1);
+              sendTerminalMessage(takenMsg);
+            }
+          }
+        }
+        
+        if (hadActiveReminder) {
+          // Force all reminder states to be cleared for this compartment
+        for (int j = 0; j < ALARMS_PER_COMP; j++) {
           schedules[i].reminderActive[j] = false;
           schedules[i].reminderDone[j] = true;
-          hadActiveReminder = true;
-          Serial.printf("[Alarm] Reminder cleared for %s\n", schedules[i].medicineName);
-          
-          // Send medicine taken message to terminal
-          if (Blynk.connected()) {
-            String takenMsg = "TAKEN: " + String(schedules[i].medicineName) + " from compartment " + (i+1);
-            sendTerminalMessage(takenMsg);
-          }
         }
-      }
-      
-      if (hadActiveReminder) {
+        
         // Keep green solid for 3 seconds, then turn off
         timer.setTimeout(3000L, [i]() {
-          if (ledControls[i].state == LED_GREEN_SOLID) {
-            turnOffLED(i);
-          }
-        });
+            if (ledControls[i].state == LED_GREEN_SOLID) {
+              turnOffLED(i);
+            }
+          });
+        } else {
+          // No active reminder - show blue blink briefly to acknowledge lid opening
+          setBlueBlink(i);
+          timer.setTimeout(2000L, [i]() {
+            if (ledControls[i].state == LED_BLUE_BLINK) {
+              turnOffLED(i);
+            }
+          });
+        }
       } else {
-        // No active reminder - show blue blink briefly to acknowledge lid opening
-        setBlueBlink(i);
-        timer.setTimeout(2000L, [i]() {
-          if (ledControls[i].state == LED_BLUE_BLINK) {
+        // LID CLOSED (magnet close to sensor - now reading LOW in Wokwi)
+        Serial.printf("[Input] Compartment %d closed\n", i + 1);
+        
+        // Briefly blink white to acknowledge closing
+        setWhiteBlink(i);
+        timer.setTimeout(1000L, [i]() {
+          if (ledControls[i].state == LED_WHITE_BLINK) {
             turnOffLED(i);
           }
         });
       }
-    }
-    
-    // For Hall Effect: HIGH means magnetic field detected (lid is closed)
-    // This is equivalent to a button release in the original code
-    if (previousHallState[i] == LOW && state == HIGH) {
-      Serial.printf("[Input] Compartment %d closed\n", i + 1);
       
-      // Briefly blink white to acknowledge closing
-      setWhiteBlink(i);
-      timer.setTimeout(1000L, [i]() {
-        if (ledControls[i].state == LED_WHITE_BLINK) {
-          turnOffLED(i);
-        }
-      });
+      // Update previous state
+      previousHallState[i] = reading;
     }
-    
-    previousHallState[i] = state;
   }
 }
 
@@ -484,27 +494,32 @@ void testRGBLEDsDirect() {
 
 // Function to test Hall Effect sensors
 void testHallSensors() {
-  Serial.println("[TEST] Testing Hall Effect sensors...");
+  Serial.println("[TEST] Testing Hall Effect sensors for MedBox lids...");
+  Serial.println("[TEST] ===== WOKWI SIMULATION SETTINGS =====");
+  Serial.println("[TEST] For custom Hall Effect sensor simulation:");
+  Serial.println("[TEST] 1. For LID CLOSED: Set 'Magnet' slider to 80-100 (HIGH reading)");
+  Serial.println("[TEST] 2. For LID OPEN: Set 'Magnet' slider to 0-20 (LOW reading)");
+  Serial.println("[TEST] 3. Set 'Sensitivity' to 50 for standard detection");
+  Serial.println("[TEST] ======================================");
   
   for (int i = 0; i < NUM_COMPARTMENTS; i++) {
     // White LED during testing
     setWhite(i);
+    delay(200);
     
     // Read current state
     int sensorReading = digitalRead(hallSensorPins[i]);
     
-    Serial.printf("[TEST] Compartment %d sensor: %s\n", i+1, 
-                 sensorReading == HIGH ? "MAGNET DETECTED (HIGH) - LID CLOSED" : "NO MAGNET (LOW) - LID OPEN");
-    
-    // Visual feedback based on state
-    if (sensorReading == HIGH) {
-      // Magnet detected - lid is closed
-      setGreen(i);
-      Serial.printf("[TEST] Compartment %d shows CLOSED state\n", i+1);
+    if (sensorReading == LOW) {
+      // Magnet detected - lid is closed (in Wokwi, this is LOW)
+      setBlue(i);
+      Serial.printf("[TEST] Compartment %d: MAGNET DETECTED (LOW) - LID CLOSED\n", i+1);
+      Serial.println("       When you open the lid (set Magnet to 0), the alarm should stop");
     } else {
-      // No magnet - lid is open
-      setRed(i);
-      Serial.printf("[TEST] Compartment %d shows OPEN state\n", i+1);
+      // No magnet - lid is open (in Wokwi, this is HIGH)
+      setGreen(i);
+      Serial.printf("[TEST] Compartment %d: NO MAGNET (HIGH) - LID OPEN\n", i+1);
+      Serial.println("       When you close the lid (set Magnet to 80-100), the alarm can be triggered");
     }
     
     delay(1000);
@@ -513,6 +528,9 @@ void testHallSensors() {
   }
   
   Serial.println("[TEST] Hall Effect sensor test complete");
+  Serial.println("[TEST] REMEMBER: Magnet near sensor (LOW) = LID CLOSED");
+  Serial.println("[TEST]           No magnet (HIGH) = LID OPEN = MEDICINE TAKEN");
+  Serial.println("[TEST] In Wokwi simulation: Magnet=80-100 → LOW (LID CLOSED), Magnet=0-20 → HIGH (LID OPEN)");
 }
 
 void resetDoneFlags() {
@@ -797,8 +815,9 @@ void setup() {
     digitalWrite(greenPins[i], HIGH);
     digitalWrite(bluePins[i], HIGH);
     
-    // Set up Hall Effect sensor pins with internal pull-up resistors (just like buttons in second.c)
-    pinMode(hallSensorPins[i], INPUT_PULLUP);
+      // Hall Effect sensor pins (digital input)
+    // When using a Hall Effect sensor, we typically want to read the raw signal
+    pinMode(hallSensorPins[i], INPUT);
     
     // Initialize LED state struct
     turnOffLED(i);
