@@ -15,8 +15,8 @@ char ssid[] = "YourNetworkName";
 char pass[] = "YourNetworkPassword";
 
 // KY-024 Hall Effect sensor behavior:
-// - LOW = Magnet present (lid closed) - Blue LED on the KY-024 module will be ON
-// - HIGH = No magnet (lid open) - Blue LED on the KY-024 module will be OFF
+// - HIGH = Magnet present (lid closed) - Blue LED on the KY-024 module will be ON
+// - LOW = No magnet (lid open) - Blue LED on the KY-024 module will be OFF
 
 RTC_DS3231 rtc;
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -236,9 +236,29 @@ void processTimeInput(int compIdx, int alarmIdx, const BlynkParam& param) {
     a.minute = m;
     a.enabled = true;
     
+    // Clear all days first
     for (int d = 0; d < 7; d++) {
-      a.daysOfWeek[d] = t.isWeekdaySelected(d);
-      Serial.printf(" Day %d selected: %d\n", d, a.daysOfWeek[d]);
+      a.daysOfWeek[d] = false;
+    }
+    
+    // Map Blynk weekday selection to RTClib indexing
+    // Try both common indexing schemes to ensure compatibility
+    // Method 1: Blynk 1-7 (Mon-Sun) to RTClib 0-6 (Sun-Sat)
+    for (int blynkDay = 1; blynkDay <= 7; blynkDay++) {
+      bool isSelected = t.isWeekdaySelected(blynkDay);
+      if (isSelected) {
+        int rtcDay = (blynkDay == 7) ? 0 : blynkDay; // Convert: 1=Mon->1, 7=Sun->0
+        a.daysOfWeek[rtcDay] = true;
+        Serial.printf(" Blynk Day %d -> RTC Day %d: SELECTED\n", blynkDay, rtcDay);
+      }
+    }
+    
+    // Also try Method 2: Direct 0-6 mapping as backup
+    for (int d = 0; d < 7; d++) {
+      if (t.isWeekdaySelected(d)) {
+        a.daysOfWeek[d] = true;
+        Serial.printf(" Direct mapping Day %d: SELECTED\n", d);
+      }
     }
     
     // Brief white blink to indicate alarm set
@@ -305,11 +325,19 @@ void checkAlarms() {
   int m = currentTime.minute();
   int wd = currentTime.dayOfTheWeek();
   
-  Serial.printf("[Time] Checking alarms at %02d:%02d (Weekday %d)\n", h, m, wd);
+  Serial.printf("[Time] Checking alarms at %02d:%02d (RTC Weekday %d)\n", h, m, wd);
   
   for (int i = 0; i < NUM_COMPARTMENTS; i++) {
     for (int j = 0; j < ALARMS_PER_COMP; j++) {
       Alarm& a = schedules[i].alarms[j];
+      
+      if (a.enabled) {
+        Serial.printf("[Debug] Alarm %d-%d: %02d:%02d, RTC day %d enabled: %s, active: %s, done: %s\n", 
+                      i+1, j+1, a.hour, a.minute, wd, 
+                      a.daysOfWeek[wd] ? "YES" : "NO",
+                      schedules[i].reminderActive[j] ? "YES" : "NO",
+                      schedules[i].reminderDone[j] ? "YES" : "NO");
+      }
       
       if (a.enabled && a.hour == h && a.minute == m && 
           a.daysOfWeek[wd] && !schedules[i].reminderActive[j] && 
@@ -362,8 +390,8 @@ void checkHallSensors() {
   for (int i = 0; i < NUM_COMPARTMENTS; i++) {
     // Read Hall Effect sensor state
     // For KY-024 Hall Effect sensor:
-    // - LOW = Magnet present (lid closed) - Blue LED on the KY-024 module will be ON
-    // - HIGH = No magnet (lid open) - Blue LED on the KY-024 module will be OFF
+    // - HIGH = Magnet present (lid closed) - Blue LED on the KY-024 module will be ON
+    // - LOW = No magnet (lid open) - Blue LED on the KY-024 module will be OFF
     int reading = digitalRead(hallSensorPins[i]);
     
     // Enhanced debounce for KY-024 module
@@ -390,8 +418,8 @@ void checkHallSensors() {
         // Print debug information about the state change
         Serial.printf("[DEBUG] Hall Sensor %d: Changed from %s to %s\n",
                       i+1,
-                      previousHallState[i] == LOW ? "CLOSED (magnet detected)" : "OPEN (no magnet)",
-                      reading == LOW ? "CLOSED (magnet detected)" : "OPEN (no magnet)");
+                      previousHallState[i] == HIGH ? "CLOSED (magnet detected)" : "OPEN (no magnet)",
+                      reading == HIGH ? "CLOSED (magnet detected)" : "OPEN (no magnet)");
       } else {
         // Inconsistent readings, keep previous state
         reading = previousHallState[i];
@@ -400,9 +428,9 @@ void checkHallSensors() {
     
     // Detect state change
     if (reading != previousHallState[i]) {
-      if (reading == HIGH) {
+      if (reading == LOW) {
         // LID OPENED (magnet moved away from sensor)
-        // HIGH reading means no magnetic field detected
+        // LOW reading means no magnetic field detected
         Serial.printf("[Input] Compartment %d opened (Hall Effect triggered)\n", i + 1);
         
         // Show solid BLUE to indicate lid is open
@@ -431,7 +459,7 @@ void checkHallSensors() {
         }
       } else {
         // LID CLOSED (magnet close to sensor)
-        // LOW reading means magnetic field detected
+        // HIGH reading means magnetic field detected
         Serial.printf("[Input] Compartment %d closed\n", i + 1);
         
         // Turn off LED when lid is closed (return to normal state)
@@ -514,8 +542,8 @@ void testRGBLEDsDirect() {
 void testHallSensors() {
   Serial.println("[TEST] Testing Hall Effect sensors for MedBox lids...");
   Serial.println("[TEST] KY-024 Hall Effect sensor behavior:");
-  Serial.println("[TEST] 1. LOW reading = Magnet present = LID CLOSED = NO LED on MedBox");
-  Serial.println("[TEST] 2. HIGH reading = No magnet = LID OPEN = BLUE LED on MedBox");
+  Serial.println("[TEST] 1. HIGH reading = Magnet present = LID CLOSED = NO LED on MedBox");
+  Serial.println("[TEST] 2. LOW reading = No magnet = LID OPEN = BLUE LED on MedBox");
   Serial.println("[TEST] When lid OPENS: MedBox LED turns BLUE, system clears alarms");
   Serial.println("[TEST] When lid CLOSES: MedBox LED turns OFF, normal operation resumes");
   Serial.println("[TEST] If readings are inconsistent, adjust the blue potentiometer on the KY-024 module.");
@@ -529,14 +557,14 @@ void testHallSensors() {
     // Read current state
     int sensorReading = digitalRead(hallSensorPins[i]);
     
-    if (sensorReading == LOW) {
+    if (sensorReading == HIGH) {
       // Magnet detected - lid is closed - NO LED
       turnOffLED(i);
-      Serial.printf("[TEST] Compartment %d: MAGNET DETECTED (LOW) - LID CLOSED - NO LED\n", i+1);
+      Serial.printf("[TEST] Compartment %d: MAGNET DETECTED (HIGH) - LID CLOSED - NO LED\n", i+1);
     } else {
       // No magnet - lid is open - BLUE LED
       setBlue(i);
-      Serial.printf("[TEST] Compartment %d: NO MAGNET (HIGH) - LID OPEN - BLUE LED\n", i+1);
+      Serial.printf("[TEST] Compartment %d: NO MAGNET (LOW) - LID OPEN - BLUE LED\n", i+1);
     }
     
     delay(1000);
@@ -750,8 +778,8 @@ void setup() {
     
     // Configure Hall Effect sensor pins
     // For physical KY-024 Hall Effect sensors:
-    // - LOW (0) when magnet is present (lid closed) - Blue LED on the KY-024 module will be ON
-    // - HIGH (1) when no magnet (lid open) - Blue LED on the KY-024 module will be OFF
+    // - HIGH (1) when magnet is present (lid closed) - Blue LED on the KY-024 module will be ON
+    // - LOW (0) when no magnet (lid open) - Blue LED on the KY-024 module will be OFF
     // - Connect the D0 (digital output) pin from the KY-024 to the ESP32 GPIO pins
     pinMode(hallSensorPins[i], INPUT);
     
@@ -759,7 +787,7 @@ void setup() {
     previousHallState[i] = digitalRead(hallSensorPins[i]);
     Serial.printf("[Setup] Hall Sensor %d initial state: %s (Reading=%d)\n", 
                  i+1, 
-                 previousHallState[i] == LOW ? "CLOSED (Magnet detected)" : "OPEN (No magnet)", 
+                 previousHallState[i] == HIGH ? "CLOSED (Magnet detected)" : "OPEN (No magnet)", 
                  previousHallState[i]);
     
     // Initialize LED state struct
