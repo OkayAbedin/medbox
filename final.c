@@ -192,6 +192,9 @@ void updateLEDs() {
       if (now - ledControls[i].lastBlinkTime >= BLINK_INTERVAL) {
         ledControls[i].lastBlinkTime = now;
         ledControls[i].blinkOn = !ledControls[i].blinkOn;
+        
+        // Optional debug for blink state changes (uncomment if needed)
+        // Serial.printf("LED %d state %d blink: %s\n", i, st, ledControls[i].blinkOn ? "ON" : "OFF");
       }
       
       if (ledControls[i].blinkOn) {
@@ -324,10 +327,6 @@ void checkAlarms() {
           char msg[50];
           snprintf(msg, sizeof(msg), "Time for %s", schedules[i].medicineName);
           Blynk.logEvent("reminder", msg);
-          
-          // Send to terminal (V14) via sendTerminalMessage function
-          String terminalMsg = "ALARM: " + String(schedules[i].medicineName) + " due now";
-          sendTerminalMessage(terminalMsg);
         }
       }
     }
@@ -418,12 +417,6 @@ void checkHallSensors() {
             schedules[i].reminderDone[j] = true;
             hadActiveReminder = true;
             Serial.printf("[Alarm] Reminder cleared for %s\n", schedules[i].medicineName);
-            
-            // Send medicine taken message to terminal
-            if (Blynk.connected()) {
-              String takenMsg = "TAKEN: " + String(schedules[i].medicineName) + " from compartment " + (i+1);
-              sendTerminalMessage(takenMsg);
-            }
           }
         }
         
@@ -681,85 +674,6 @@ void updateLCDs() {
   Serial.printf("[LCD Sync] %s | %s\n", reminderText.c_str(), timeStr);
 }
 
-// Global variables to track status changes for V14 terminal
-String lastTerminalMessage = "";
-bool medicineTakenReported[NUM_COMPARTMENTS][ALARMS_PER_COMP] = {false};
-unsigned long lastStatusUpdate = 0;
-const unsigned long MIN_STATUS_INTERVAL = 5000; // 5 seconds between identical status updates
-
-// Format current time as a string for status messages
-String getTimeStamp() {
-  if (!safeReadRTC()) return "[??:??:??]";
-  char timestamp[10];
-  snprintf(timestamp, sizeof(timestamp), "[%02d:%02d:%02d]", 
-           currentTime.hour(), currentTime.minute(), currentTime.second());
-  return String(timestamp);
-}
-
-// Send a timestamped message to the V14 terminal
-void sendTerminalMessage(const String &message) {
-  if (!Blynk.connected()) return;
-  
-  String fullMessage = getTimeStamp() + " " + message;
-  
-  // Only send if it's a new message or sufficient time has passed
-  if (fullMessage != lastTerminalMessage || millis() - lastStatusUpdate > MIN_STATUS_INTERVAL) {
-    Blynk.virtualWrite(V14, fullMessage);
-    lastTerminalMessage = fullMessage;
-    lastStatusUpdate = millis();
-    Serial.printf("[Terminal] %s\n", fullMessage.c_str());
-  }
-}
-
-void sendStatusToBlynk() {
-  if (WiFi.status() != WL_CONNECTED || !Blynk.connected()) return;
-  if (!safeReadRTC()) {
-    sendTerminalMessage("RTC Error - Check connection");
-    return;
-  }
-  
-  // Check for active reminders
-  int activeCount = 0;
-  String activeMedicines = "";
-  
-  for (int i = 0; i < NUM_COMPARTMENTS; i++) {
-    for (int j = 0; j < ALARMS_PER_COMP; j++) {
-      // Check for active reminders
-      if (schedules[i].reminderActive[j]) {
-        activeCount++;
-        if (activeMedicines.length() > 0) activeMedicines += ", ";
-        activeMedicines += schedules[i].medicineName;
-        
-        // Check if this is a new active reminder that hasn't been reported yet
-        if (!medicineTakenReported[i][j]) {
-          // Report new active reminder
-          String alarmMsg = "ALARM: Time to take " + String(schedules[i].medicineName) + " (Comp " + (i+1) + ")";
-          sendTerminalMessage(alarmMsg);
-          medicineTakenReported[i][j] = true;
-        }
-      } 
-      else if (medicineTakenReported[i][j] && schedules[i].reminderDone[j]) {
-        // This reminder was active but is now done - medicine taken
-        String takenMsg = "TAKEN: " + String(schedules[i].medicineName) + " from compartment " + (i+1);
-        sendTerminalMessage(takenMsg);
-        medicineTakenReported[i][j] = false; // Reset for next time
-      }
-    }
-  }
-  
-  // Send regular status update
-  String statusMsg;
-  if (activeCount > 0) {
-    statusMsg = String(activeCount) + " active: " + activeMedicines;
-  } else {
-    // Find next alarm time and report it
-    String nextAlarm = getNextAlarmText();
-    statusMsg = "System active. " + nextAlarm;
-  }
-  
-  sendTerminalMessage(statusMsg);
-}
-
 void indicateUpcomingAlarms() {
   if (!safeReadRTC()) return;
   
@@ -934,7 +848,6 @@ void setup() {
   timer.setInterval(200L, handleBuzzer);
   timer.setInterval(5000L, resetDoneFlags);
   timer.setInterval(1000L, updateLCDs);        // Update both physical LCD and Blynk every second
-  timer.setInterval(15000L, sendStatusToBlynk); // Update status on V14
   timer.setInterval(60000L, indicateUpcomingAlarms); // Check for upcoming alarms every minute
 
   Serial.println("[Setup] Complete - Hall Effect Sensors ready!");
