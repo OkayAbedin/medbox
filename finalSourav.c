@@ -11,8 +11,8 @@
 #include <climits>
 
 // WiFi credentials - replace with your actual network details
-char ssid[] = "YourNetworkName";
-char pass[] = "YourNetworkPassword";
+char ssid[] = "asd";
+char pass[] = "asd";
 
 // KY-024 Hall Effect sensor behavior:
 // - HIGH = Magnet present (lid closed) - Blue LED on the KY-024 module will be ON
@@ -52,8 +52,8 @@ const int bluePins[NUM_COMPARTMENTS]  = {15, 17, 19};
 // Digital output (D0) from KY-024 Hall Effect sensor module
 // Note: Connect ONLY the D0 pin from the KY-024 modules to these GPIO pins
 // The A0 (analog) pin from the KY-024 is not used in this implementation
-const int hallSensorPins[NUM_COMPARTMENTS] = {25, 26, 27};
-const int buzzerPin = 33;
+const int hallSensorPins[NUM_COMPARTMENTS] = {33, 26, 27};
+const int buzzerPin = 4;
 
 // Hall Effect sensor states for tracking changes
 bool previousHallState[NUM_COMPARTMENTS] = {HIGH, HIGH, HIGH};
@@ -362,6 +362,13 @@ void checkAlarms() {
 }
 
 void handleBuzzer() {
+  static unsigned long lastSweepTime = 0;
+  static int freq = 1000;
+  static int dir = 1; // 1 = up, -1 = down
+  const int minFreq = 900;
+  const int maxFreq = 2200;
+  const int step = 20;
+  const unsigned long sweepDelay = 30; // ms
   bool anyActive = false;
   for (int i = 0; i < NUM_COMPARTMENTS; i++) {
     for (int j = 0; j < ALARMS_PER_COMP; j++) {
@@ -374,14 +381,24 @@ void handleBuzzer() {
   }
 
   if (anyActive) {
-    if (millis() - lastBuzzerTime >= buzzerInterval) {
-      buzzerState = !buzzerState;
-      lastBuzzerTime = millis();
-      digitalWrite(buzzerPin, buzzerState ? HIGH : LOW);
+    unsigned long now = millis();
+    if (now - lastSweepTime > sweepDelay) {
+      lastSweepTime = now;
+      tone(buzzerPin, freq);
+      freq += dir * step;
+      if (freq >= maxFreq) {
+        freq = maxFreq;
+        dir = -1;
+      } else if (freq <= minFreq) {
+        freq = minFreq;
+        dir = 1;
+      }
     }
   } else {
-    digitalWrite(buzzerPin, LOW);
-    buzzerState = false;
+    noTone(buzzerPin);
+    freq = minFreq;
+    dir = 1;
+    lastSweepTime = millis();
   }
 }
 
@@ -685,7 +702,7 @@ void updateLCDs() {
   snprintf(timeStr, sizeof(timeStr), "Time: %02d:%02d:%02d", 
            currentTime.hour(), currentTime.minute(), currentTime.second());
 
-  // Update physical LCD with padding
+  // Update physical LCD with padding (always updated for real-time display)
   lcd.setCursor(0, 0);
   lcd.print(reminderText);
   lcd.print("                ");  // Simple padding approach from old sketch
@@ -693,7 +710,7 @@ void updateLCDs() {
   lcd.print(timeStr);
   lcd.print("                ");  // Simple padding approach from old sketch
 
-  // Only update Blynk when minute changes to save messages
+  // OPTIMIZATION: Only update Blynk when content actually changes
   static String lastReminderText = "";
   static int lastHour = -1;
   static int lastMinute = -1;
@@ -703,7 +720,7 @@ void updateLCDs() {
        currentTime.hour() != lastHour || 
        currentTime.minute() != lastMinute)) {
     
-    // Only send time without seconds to reduce changes
+    // Only send time without seconds to reduce update frequency
     char blynkTimeStr[20];
     snprintf(blynkTimeStr, sizeof(blynkTimeStr), "Time: %02d:%02d", 
              currentTime.hour(), currentTime.minute());
