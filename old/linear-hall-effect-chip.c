@@ -91,7 +91,7 @@ bool calculate_digital_output(chip_state_t *chip, float analog_value) {
   float threshold_offset = (chip->sensitivity - 50.0f) * 8.0f;
   float threshold = chip->zero_level + threshold_offset;
   
-  // For MedBox: We want D0 to be HIGH when magnet is present (lid closed)
+  // For CareBox: We want D0 to be HIGH when magnet is present (lid closed)
   // If analog_value > threshold, we have a strong enough field (south pole)
   // to consider the lid closed
   bool result = analog_value > threshold;
@@ -126,7 +126,7 @@ void chip_on_control_change(const char *id, float value) {
     printf("Magnetic field set to %.1f (-%d = North, +%d = South)\n", 
            value, (int)value < 0 ? (int)-value : 0, (int)value > 0 ? (int)value : 0);
     
-    // For simplicity in the MedBox project:
+    // For simplicity in the CareBox project:
     // - Strong South field (>50): Digital HIGH (lid closed)
     // - Weak or no field (<50): Digital LOW (lid open)
     if (value >= 50) {

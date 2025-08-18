@@ -2,7 +2,7 @@
 
 ## Recent Fix Applied
 
-I've made two important changes to your MedBox code to ensure alarms turn off correctly when you open a compartment:
+I've made two important changes to your CareBox code to ensure alarms turn off correctly when you open a compartment:
 
 1. **Improved debouncing** - Extended the debounce delay from 5ms to 20ms and added debug output to help track sensor state changes.
 2. **Force alarm deactivation** - Added code to ensure ALL alarms for a compartment are cleared when the lid is opened, regardless of previous state.

@@ -1,7 +1,7 @@
 #define BLYNK_PRINT Serial
 
 #define BLYNK_TEMPLATE_ID "TMPL6frQ21qaS"
-#define BLYNK_TEMPLATE_NAME "MedBox"
+#define BLYNK_TEMPLATE_NAME "CareBox"
 #define BLYNK_AUTH_TOKEN "Ctxz2DA5sUwh9tYBT5r3kRteCxmOHeSh"
 
 #include <WiFi.h>
@@ -329,7 +329,7 @@ void setup() {
   lcd.begin(16, 2);
   lcd.backlight();
   lcd.setCursor(0, 0);
-  lcd.print("MedBox | MarsLab");
+  lcd.print("CareBox | MarsLab");
 
   WiFi.begin(ssid, pass);
   int retries = 0;

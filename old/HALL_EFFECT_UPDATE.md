@@ -18,7 +18,7 @@ I've updated the Hall Effect sensor logic to match what's actually happening in 
 3. Updated all comments to reflect the actual behavior in Wokwi
 4. Updated the test functions to report the correct states
 
-## How to use the MedBox now:
+## How to use the CareBox now:
 1. When setting up the simulation, all compartments should show **LOW** readings initially (lids closed)
 2. To simulate opening a lid:
    - Change the Hall Effect "Magnet" slider from 100 to 0

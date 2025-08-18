@@ -1,6 +1,6 @@
 # Wokwi Hall Effect Sensor Simulation Guide
 
-## Optimal Settings for MedBox Simulation
+## Optimal Settings for CareBox Simulation
 
 ### Key Values to Use
 
@@ -62,7 +62,7 @@ The Hall Effect sensor simulation works as follows:
    - It simulates turning the potentiometer on a physical KY-024 sensor
    - It determines how strong the magnetic field must be to trigger a HIGH reading
 
-3. For the MedBox:
+3. For the CareBox:
    - We use South pole detection (positive Magnet values)
    - A strong field (Magnet=80-100) means the lid is closed
    - No field (Magnet=0-20) means the lid is open

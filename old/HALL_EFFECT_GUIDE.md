@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document explains how the A3141 Hall Effect sensor is integrated into the MedBox project, replacing the pushbutton/reed switch implementation from the previous versions.
+This document explains how the A3141 Hall Effect sensor is integrated into the CareBox project, replacing the pushbutton/reed switch implementation from the previous versions.
 
 ## What is a Hall Effect Sensor?
 

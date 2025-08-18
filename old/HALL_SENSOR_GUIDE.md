@@ -1,8 +1,8 @@
 # Hall Effect Sensor Implementation Guide
 
-## Hardware Setup for Real-World MedBox
+## Hardware Setup for Real-World CareBox
 
-This guide explains how to implement Hall Effect sensors for the MedBox project with real hardware. The `fifth.c` file has been created by taking the best parts of both `fourth.c` and `second.c`.
+This guide explains how to implement Hall Effect sensors for the CareBox project with real hardware. The `fifth.c` file has been created by taking the best parts of both `fourth.c` and `second.c`.
 
 ### Hall Effect Sensor Logic
 
@@ -38,7 +38,7 @@ In real hardware (KY-024 or KY-003 modules):
 ### Installation Tips
 
 1. **Mounting the Sensors**:
-   - Mount Hall Effect sensors on the MedBox frame
+   - Mount Hall Effect sensors on the CareBox frame
    - Position them where the lid will close directly above them
 
 2. **Magnet Placement**:
@@ -55,4 +55,4 @@ In real hardware (KY-024 or KY-003 modules):
 2. Open and close each lid to verify proper state changes
 3. Set an alarm and verify it clears when opening the appropriate lid
 
-With this implementation, your MedBox will reliably detect when compartments are opened or closed in real-world hardware conditions.
+With this implementation, your CareBox will reliably detect when compartments are opened or closed in real-world hardware conditions.

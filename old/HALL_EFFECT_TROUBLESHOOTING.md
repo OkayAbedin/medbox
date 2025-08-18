@@ -1,4 +1,4 @@
-# Troubleshooting Guide for MedBox with Hall Effect Sensors
+# Troubleshooting Guide for CareBox with Hall Effect Sensors
 
 ## Random LED Blinking Issue - FIXED
 

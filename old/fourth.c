@@ -1,6 +1,6 @@
 #define BLYNK_PRINT Serial
 #define BLYNK_TEMPLATE_ID "TMPL6frQ21qaS"
-#define BLYNK_TEMPLATE_NAME "MedBox"
+#define BLYNK_TEMPLATE_NAME "CareBox"
 #define BLYNK_AUTH_TOKEN "Ctxz2DA5sUwh9tYBT5r3kRteCxmOHeSh"
 
 #include <WiFi.h>
@@ -494,7 +494,7 @@ void testRGBLEDsDirect() {
 
 // Function to test Hall Effect sensors
 void testHallSensors() {
-  Serial.println("[TEST] Testing Hall Effect sensors for MedBox lids...");
+  Serial.println("[TEST] Testing Hall Effect sensors for CareBox lids...");
   Serial.println("[TEST] ===== WOKWI SIMULATION SETTINGS =====");
   Serial.println("[TEST] For custom Hall Effect sensor simulation:");
   Serial.println("[TEST] 1. For LID CLOSED: Set 'Magnet' slider to 80-100 (HIGH reading)");
@@ -796,7 +796,7 @@ void indicateUpcomingAlarms() {
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("[Setup] Starting MedBox with Hall Effect Sensors...");
+  Serial.println("[Setup] Starting CareBox with Hall Effect Sensors...");
 
   // Initialize RGB LED pins
   for (int i = 0; i < NUM_COMPARTMENTS; i++) {
@@ -838,7 +838,7 @@ void setup() {
   lcd.begin(16, 2);
   lcd.backlight();
   lcd.setCursor(0, 0);
-  lcd.print("MedBox | MarsLab");
+  lcd.print("CareBox | MarsLab");
   lcd.setCursor(0, 1);
   lcd.print("Hall Sensor Mode");
   

@@ -1,7 +1,7 @@
-# MedBox Project Overview
+# CareBox Project Overview
 
 ## Project Description
-MedBox is an intelligent IoT-based medicine reminder system designed to help users manage medication schedules effectively. The system uses ESP32 microcontroller, Hall effect sensors, RGB LEDs, and Blynk IoT platform to provide comprehensive medication management with visual, audio, and mobile notifications.
+CareBox is an intelligent IoT-based medicine reminder system designed to help users manage medication schedules effectively. The system uses ESP32 microcontroller, Hall effect sensors, RGB LEDs, and Blynk IoT platform to provide comprehensive medication management with visual, audio, and mobile notifications.
 
 ## Key Features
 

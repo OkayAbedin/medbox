@@ -1,7 +1,7 @@
-# MedBox LED Indicator Guide
+# CareBox LED Indicator Guide
 
 ## Overview
-The MedBox system uses RGB LEDs to provide visual feedback about medication schedules and system status. Each of the three compartments has its own RGB LED that can display different colors and patterns to indicate various states.
+The CareBox system uses RGB LEDs to provide visual feedback about medication schedules and system status. Each of the three compartments has its own RGB LED that can display different colors and patterns to indicate various states.
 
 ## LED States and Their Meanings
 
@@ -64,7 +64,7 @@ The MedBox system uses RGB LEDs to provide visual feedback about medication sche
 
 ## Hardware Notes
 
-- The MedBox uses **common anode RGB LEDs**, which means:
+- The CareBox uses **common anode RGB LEDs**, which means:
   - LOW signal (0V) turns an LED color ON
   - HIGH signal (3.3V) turns an LED color OFF
 - LED updates occur every 100ms for smooth blinking effects.

@@ -22,7 +22,7 @@ This guide explains how to use the custom Linear Hall Effect Sensor chip in your
 4. **Connect the Chip to Your Circuit**:
    - Connect VCC to 3.3V or 5V
    - Connect GND to ground
-   - Connect D0 to your digital input pins (pins 25, 26, 27 as per your MedBox design)
+   - Connect D0 to your digital input pins (pins 25, 26, 27 as per your CareBox design)
    - Connect A0 to your analog input pins if you want to use analog readings (optional)
 
 ## Using the Custom Chip
@@ -56,7 +56,7 @@ The chip provides visual feedback in the simulation:
 - **Gauss Gauge**: Displays the relative magnetic field strength
 - **Console Messages**: Information about power state, threshold detection, etc.
 
-## Testing Your MedBox Project
+## Testing Your CareBox Project
 
 1. **Set Up Multiple Sensors**:
    - Add three custom chips (one for each compartment)

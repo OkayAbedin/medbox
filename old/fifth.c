@@ -1,6 +1,6 @@
 #define BLYNK_PRINT Serial
 #define BLYNK_TEMPLATE_ID "TMPL6frQ21qaS"
-#define BLYNK_TEMPLATE_NAME "MedBox"
+#define BLYNK_TEMPLATE_NAME "CareBox"
 #define BLYNK_AUTH_TOKEN "Ctxz2DA5sUwh9tYBT5r3kRteCxmOHeSh"
 
 #include <WiFi.h>
@@ -519,12 +519,12 @@ void testRGBLEDsDirect() {
 
 // Function to test Hall Effect sensors (KY-024 modules)
 void testHallSensors() {
-  Serial.println("[TEST] Testing Hall Effect sensors for MedBox lids...");
+  Serial.println("[TEST] Testing Hall Effect sensors for CareBox lids...");
   Serial.println("[TEST] KY-024 Hall Effect sensor behavior:");
-  Serial.println("[TEST] 1. LOW reading = Magnet present = LID CLOSED = NO LED on MedBox");
-  Serial.println("[TEST] 2. HIGH reading = No magnet = LID OPEN = BLUE LED on MedBox");
-  Serial.println("[TEST] When lid OPENS: MedBox LED turns BLUE, system clears alarms");
-  Serial.println("[TEST] When lid CLOSES: MedBox LED turns OFF, normal operation resumes");
+  Serial.println("[TEST] 1. LOW reading = Magnet present = LID CLOSED = NO LED on CareBox");
+  Serial.println("[TEST] 2. HIGH reading = No magnet = LID OPEN = BLUE LED on CareBox");
+  Serial.println("[TEST] When lid OPENS: CareBox LED turns BLUE, system clears alarms");
+  Serial.println("[TEST] When lid CLOSES: CareBox LED turns OFF, normal operation resumes");
   Serial.println("[TEST] If readings are inconsistent, adjust the blue potentiometer on the KY-024 module.");
   Serial.println("[TEST] Testing current state of all sensors:");
   
@@ -815,7 +815,7 @@ void indicateUpcomingAlarms() {
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("[Setup] Starting MedBox with Hall Effect Sensors...");
+  Serial.println("[Setup] Starting CareBox with Hall Effect Sensors...");
 
   // Initialize RGB LED pins
   for (int i = 0; i < NUM_COMPARTMENTS; i++) {
@@ -867,7 +867,7 @@ void setup() {
   lcd.begin(16, 2);
   lcd.backlight();
   lcd.setCursor(0, 0);
-  lcd.print("MedBox | MarsLab");
+  lcd.print("CareBox | MarsLab");
   lcd.setCursor(0, 1);
   lcd.print("Booting...");
   

@@ -1,6 +1,6 @@
-# MedBox Operation with Hall Effect Sensors
+# CareBox Operation with Hall Effect Sensors
 
-## How the MedBox Works
+## How the CareBox Works
 
 1. **Normal State:**
    - All compartment lids are **closed** with magnets near the Hall Effect sensors

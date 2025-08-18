@@ -1,4 +1,4 @@
-# KY-024 Hall Effect Sensor Guide for MedBox
+# KY-024 Hall Effect Sensor Guide for CareBox
 
 ## About the KY-024 Module
 
@@ -18,7 +18,7 @@ The KY-024 Linear Hall Effect sensor module you're using has several important f
    - Blue potentiometer for sensitivity adjustment
    - LED indicator (lights up when magnetic field is detected)
 
-## Setup for MedBox Implementation
+## Setup for CareBox Implementation
 
 ### Hardware Connection
 
@@ -61,7 +61,7 @@ The KY-024 Linear Hall Effect sensor module you're using has several important f
    - Bring a magnet close to the sensor
    - The onboard LED should light up (D0 output LOW)
 
-2. **MedBox Integration Test**:
+2. **CareBox Integration Test**:
    - Use the `testHallSensors()` function in the `fifth.c` code
    - Close each compartment lid (with magnet) - should read LOW (0)
    - Open each compartment lid - should read HIGH (1)

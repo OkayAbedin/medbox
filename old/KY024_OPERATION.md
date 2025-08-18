@@ -1,12 +1,12 @@
 # KY-024 Hall Effect Sensor Operation Guide
 
-## How the KY-024 Works with MedBox
+## How the KY-024 Works with CareBox
 
 ![KY-024 Hall Effect Sensor](https://imgaz.staticbg.com/images/oaupload/banggood/images/B6/C8/360765ff-7d48-413b-8dea-399c85ea4e5f.jpg)
 
 ### Lid State and Sensor Behavior
 
-| Lid State | Magnet Position | KY-024 Blue LED | Digital Output (D0) | MedBox Action |
+| Lid State | Magnet Position | KY-024 Blue LED | Digital Output (D0) | CareBox Action |
 |-----------|----------------|-----------------|---------------------|---------------|
 | **CLOSED** | Near Sensor | **ON** | **LOW (0)** | Normal operation |
 | **OPEN** | Away from Sensor | **OFF** | **HIGH (1)** | Clears alarms, indicates medicine taken |
@@ -25,17 +25,17 @@
    - The digital output (D0) will change to **HIGH (1)**
    - System recognizes compartment opening
    - **Any active alarm for that compartment will be cleared**
-   - The RGB LED on the MedBox will briefly turn GREEN
+   - The RGB LED on the CareBox will briefly turn GREEN
 
 ### Alarm Behavior
 
 - **Active Alarm + Lid Closed**:
-  - Red blinking LED on MedBox
+  - Red blinking LED on CareBox
   - Buzzer beeping
   - Blue LED on KY-024 module is ON (magnet detected)
 
 - **Active Alarm + Lid Opened**:
-  - Green LED on MedBox (indicates medicine taken)
+  - Green LED on CareBox (indicates medicine taken)
   - Buzzer stops
   - Blue LED on KY-024 module turns OFF (no magnet detected)
   - Alarm cleared automatically
@@ -43,7 +43,7 @@
 ## Installation Tips
 
 1. **Mount the KY-024 Module**:
-   - Position the sensor on the MedBox frame
+   - Position the sensor on the CareBox frame
    - The component side should face where the lid will close
 
 2. **Attach Magnet to Lid**:
@@ -66,8 +66,8 @@
 
 2. **Alarm Clearing Test**:
    - Set up an alarm for the current time
-   - When the alarm activates, the MedBox LED will blink red
+   - When the alarm activates, the CareBox LED will blink red
    - Open the compartment and verify:
      - Blue LED on KY-024 turns OFF
-     - MedBox LED turns green
+     - CareBox LED turns green
      - Alarm clears

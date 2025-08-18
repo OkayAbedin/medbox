@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document explains how the Linear Hall Effect Sensor Module (KY-024 or equivalent) is integrated into the MedBox project, offering advanced magnetic sensing capabilities compared to simpler approaches in previous versions.
+This document explains how the Linear Hall Effect Sensor Module (KY-024 or equivalent) is integrated into the CareBox project, offering advanced magnetic sensing capabilities compared to simpler approaches in previous versions.
 
 ## What is a Linear Hall Effect Sensor Module?
 
