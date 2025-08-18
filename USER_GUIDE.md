@@ -1,7 +1,7 @@
-# MedBox User Guide
+# CareBox User Guide
 
-## Welcome to MedBox
-MedBox is an intelligent IoT-based medicine reminder system that helps you manage medication schedules across three compartments with visual, audio, and mobile notifications.
+## Welcome to CareBox
+CareBox is an intelligent IoT-based medicine reminder system that helps you manage medication schedules across three compartments with visual, audio, and mobile notifications.
 
 ## Quick Start
 
@@ -9,7 +9,7 @@ MedBox is an intelligent IoT-based medicine reminder system that helps you manag
 - Ensure all hardware is connected according to the Hardware Setup Guide
 - Power on the device
 - LEDs will cycle through colors during startup
-- LCD will display "MedBox | MarsLab" then "Hall Sensor Mode"
+- LCD will display "CareBox @MarsLab" then "Hall Sensor Mode"
 
 ### 2. Connect to WiFi
 - Device will automatically connect using configured credentials
@@ -47,10 +47,7 @@ MedBox is an intelligent IoT-based medicine reminder system that helps you manag
 
 ### Monitoring Status
 - **V12 & V13**: Display current time and next alarm information
-- **V14 Terminal**: Shows real-time status messages:
-  - Alarm notifications
-  - Medicine taken confirmations
-  - System status updates
+- **Blynk Event Log**: Shows real-time alarm notifications
 
 ## Understanding LED Indicators
 
@@ -82,7 +79,7 @@ MedBox is an intelligent IoT-based medicine reminder system that helps you manag
    - Open the compartment lid
    - Blue LED will turn on
    - Alarm will clear automatically
-   - Terminal shows "TAKEN: Medicine name from compartment X"
+   - Blynk event notification shows medicine taken
 
 3. **After taking medicine**:
    - Close the compartment lid
@@ -93,8 +90,8 @@ MedBox is an intelligent IoT-based medicine reminder system that helps you manag
 
 #### Mobile Notifications
 - **Blynk Events**: Sent when alarms activate
-- **Terminal Updates**: Real-time status in V14 widget
-- **Status Messages**: Include timestamps and compartment numbers
+- **Event History**: View past alarms in Blynk event log
+- **Notification Settings**: Configure in Blynk app preferences
 
 #### Audio Alerts
 - **Buzzer Pattern**: Intermittent beeping when alarm is active
@@ -192,7 +189,7 @@ MedBox is an intelligent IoT-based medicine reminder system that helps you manag
 ### Mobile App Usage
 1. **Keep App Open**: Notifications work better with app occasionally opened
 2. **Network**: Ensure phone has internet connection for remote monitoring
-3. **Terminal History**: Use V14 terminal to review medication history
+3. **Event History**: Use Blynk event log to review medication history
 4. **Backup Settings**: Save Blynk project QR code for backup
 
 ### Troubleshooting Steps

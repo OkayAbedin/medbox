@@ -1,7 +1,7 @@
-# MedBox Software Setup Guide
+# CareBox Software Setup Guide
 
 ## Overview
-This guide covers the software configuration and setup for the MedBox IoT Medicine Reminder System.
+This guide covers the software configuration and setup for the CareBox IoT Medicine Reminder System.
 
 ## Prerequisites
 
@@ -57,7 +57,7 @@ Install these libraries through Arduino IDE Library Manager:
 
 3. **Create New Project**
    - Tap "Create New Project"
-   - Project Name: "MedBox"
+   - Project Name: "CareBox"
    - Device: "ESP32"
    - Connection: "WiFi"
    - Tap "Create Project"
@@ -86,13 +86,12 @@ Add these widgets to your Blynk project:
 #### Display Widgets
 - **V12**: LCD Line 1 (Value Display)
 - **V13**: LCD Line 2 (Value Display)
-- **V14**: Terminal (for status messages)
 
 ### Step 4: Code Configuration
 
 1. **Open the Code**
-   - Open `final.c` in Arduino IDE
-   - Save as `MedBox.ino` (Arduino sketch format)
+   - Open `sketch.c` in Arduino IDE
+   - Save as `CareBox.ino` (Arduino sketch format)
 
 2. **Update Credentials**
    ```cpp
@@ -124,9 +123,9 @@ char pass[] = "YourNetworkPassword"; // Your WiFi password
 
 ### Blynk Settings
 ```cpp
-#define BLYNK_TEMPLATE_ID "TMPL6frQ21qaS"    // Keep as is
-#define BLYNK_TEMPLATE_NAME "MedBox"         // Keep as is
-#define BLYNK_AUTH_TOKEN "YourTokenHere"     // Replace with your token
+#define BLYNK_TEMPLATE_ID "TMPL6yo8k98jG"      // Keep as is
+#define BLYNK_TEMPLATE_NAME "CareBox"          // Keep as is
+#define BLYNK_AUTH_TOKEN "YourTokenHere"       // Replace with your token
 ```
 
 ### Hardware Pin Assignments
@@ -135,8 +134,8 @@ char pass[] = "YourNetworkPassword"; // Your WiFi password
 const int redPins[NUM_COMPARTMENTS]   = {13, 12, 14};
 const int greenPins[NUM_COMPARTMENTS] = {32, 16, 18};
 const int bluePins[NUM_COMPARTMENTS]  = {15, 17, 19};
-const int hallSensorPins[NUM_COMPARTMENTS] = {25, 26, 27};
-const int buzzerPin = 33;
+const int hallSensorPins[NUM_COMPARTMENTS] = {33, 26, 27};
+const int buzzerPin = 4;
 ```
 
 ### Timing Settings
@@ -154,8 +153,8 @@ const unsigned long buzzerInterval = 500;  // Buzzer beep interval (ms)
 - **Off**: Normal state (lid closed, no alarms)
 
 ### Hall Effect Sensor Logic
-- **LOW Reading**: Magnet present (lid closed)
-- **HIGH Reading**: No magnet (lid open)
+- **HIGH Reading**: Magnet present (lid closed)
+- **LOW Reading**: No magnet (lid open)
 - **Opening lid**: Clears active alarms, shows blue LED
 - **Closing lid**: Turns off LED, resumes normal operation
 
@@ -170,8 +169,8 @@ const unsigned long buzzerInterval = 500;  // Buzzer beep interval (ms)
 ### Serial Monitor Output
 Enable serial monitoring (115200 baud) to see:
 ```
-[Setup] Starting MedBox with Hall Effect Sensors...
-[Setup] Initializing compartment 1: R=13, G=32, B=15, Hall Sensor=25
+[Setup] Starting CareBox with Hall Effect Sensors...
+[Setup] Initializing compartment 1: R=13, G=32, B=15, Hall Sensor=33
 [WiFi] Connected
 [Blynk] Connected, syncing virtual pins...
 [Setup] Complete - Hall Effect Sensors ready!
@@ -181,7 +180,7 @@ Enable serial monitoring (115200 baud) to see:
 - `[Input] Compartment X opened`: Lid detection working
 - `[Alarm] Triggered for Medicine`: Alarm system active
 - `[LED] Blue LED on for compartment X`: Visual feedback working
-- `[Terminal] Status messages`: Blynk communication working
+- `[LCD Sync] Updated Blynk`: Blynk communication working
 
 ### Testing Sequence
 1. **Power On**: LEDs cycle through colors

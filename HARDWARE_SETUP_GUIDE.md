@@ -1,7 +1,7 @@
-# MedBox Hardware Setup Guide
+# CareBox Hardware Setup Guide
 
 ## Overview
-This guide will help you set up the MedBox IoT Medicine Reminder System using ESP32, KY-024 Hall Effect sensors, RGB LEDs, and other components.
+This guide will help you set up the CareBox IoT Medicine Reminder System using ESP32, KY-024 Hall Effect sensors, RGB LEDs, and other components.
 
 ## Components Required
 
@@ -35,14 +35,14 @@ This guide will help you set up the MedBox IoT Medicine Reminder System using ES
 #### Hall Effect Sensors (KY-024)
 | Compartment | GPIO Pin | KY-024 Connection |
 |-------------|----------|-------------------|
-| Compartment 1 | GPIO 25 | D0 (Digital Output) |
+| Compartment 1 | GPIO 33 | D0 (Digital Output) |
 | Compartment 2 | GPIO 26 | D0 (Digital Output) |
 | Compartment 3 | GPIO 27 | D0 (Digital Output) |
 
 #### Other Components
 | Component | ESP32 Pin | Notes |
 |-----------|-----------|-------|
-| Buzzer | GPIO 33 | Passive buzzer |
+| Buzzer | GPIO 4 | Passive buzzer |
 | I2C SDA | GPIO 21 | For LCD and RTC |
 | I2C SCL | GPIO 22 | For LCD and RTC |
 
@@ -51,7 +51,7 @@ This guide will help you set up the MedBox IoT Medicine Reminder System using ES
 KY-024 Module → ESP32
 VCC → 3.3V or 5V
 GND → GND
-D0 → GPIO Pin (25, 26, or 27)
+D0 → GPIO Pin (33, 26, or 27)
 A0 → Not connected (not used)
 ```
 
@@ -119,7 +119,7 @@ SCL → GPIO 22
 ### Power-On Test
 1. Connect power to ESP32
 2. All RGB LEDs should briefly cycle through colors during startup
-3. LCD should display "MedBox | MarsLab" and "Hall Sensor Mode"
+3. LCD should display "CareBox @MarsLab" and "Hall Sensor Mode"
 
 ### Hall Sensor Test
 1. Open each compartment lid - blue LED should turn on

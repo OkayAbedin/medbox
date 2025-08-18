@@ -11,8 +11,8 @@
 #include <climits>
 
 // WiFi credentials - replace with your actual network details
-char ssid[] = "asd";
-char pass[] = "asd";
+char ssid[] = "DIU_Daffodil Smart City";
+char pass[] = "diu123456789";
 
 // KY-024 Hall Effect sensor behavior:
 // - HIGH = Magnet present (lid closed) - Blue LED on the KY-024 module will be ON
